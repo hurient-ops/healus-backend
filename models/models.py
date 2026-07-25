@@ -1,16 +1,20 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from core.database import Base
+import uuid
 
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     name = Column(String, nullable=True)
-    device_mac = Column(String, unique=True, index=True, nullable=True)  # Mapped to a single pump for now
+    phone_number = Column(String, nullable=False)
+    birth_date = Column(String, nullable=False)
+    pump_id = Column(String, unique=True, index=True, nullable=True)  # 16-byte PID from pump
+    terms_agreed = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
@@ -21,9 +25,9 @@ class User(Base):
 class PumpLog(Base):
     __tablename__ = "pump_logs"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=True) # Linked to User
-    device_mac = Column(String, index=True, nullable=False)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=True) # Linked to User
+    pump_id = Column(String, index=True, nullable=False)
     month = Column(Integer, nullable=False)
     day = Column(Integer, nullable=False)
     base_total = Column(Float, nullable=False)
@@ -49,9 +53,9 @@ class PumpLog(Base):
 class RawPacketLog(Base):
     __tablename__ = "raw_packet_logs"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=True) # Linked to User
-    device_mac = Column(String, index=True, nullable=False)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=True) # Linked to User
+    pump_id = Column(String, index=True, nullable=False)
     direction = Column(String, nullable=False)  # 'TX' or 'RX'
     payload_hex = Column(String, nullable=False)
     timestamp = Column(String, nullable=False)
@@ -62,8 +66,8 @@ class RawPacketLog(Base):
 class BloodGlucoseLog(Base):
     __tablename__ = "blood_glucose_logs"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=True)
     glucose_value = Column(Integer, nullable=False)
     tag = Column(String, nullable=False) # e.g., '식전', '식후', '공복', '취침전'
     recorded_at = Column(DateTime(timezone=True), nullable=False)

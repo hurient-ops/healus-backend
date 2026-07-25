@@ -5,13 +5,13 @@ import dateutil.parser
 
 from core.database import get_db
 from models import models, schemas
+from api.deps import get_current_user
 from openai import OpenAI
 
 router = APIRouter()
 
 @router.get("/dashboard")
-def get_dashboard_data(email: str = "testuser@healus.com", db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.email == email).first()
+def get_dashboard_data(user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -54,8 +54,7 @@ def get_dashboard_data(email: str = "testuser@healus.com", db: Session = Depends
     }
 
 @router.post("/bg-log")
-def log_blood_glucose(payload: schemas.BloodGlucoseLogRequest, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.email == payload.user_email).first()
+def log_blood_glucose(payload: schemas.BloodGlucoseLogRequest, user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -76,8 +75,7 @@ def log_blood_glucose(payload: schemas.BloodGlucoseLogRequest, db: Session = Dep
     return {"status": "success", "message": "혈당이 성공적으로 기록되었습니다."}
 
 @router.get("/ai-insight")
-def get_ai_insight(email: str = "testuser@healus.com", db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.email == email).first()
+def get_ai_insight(user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -155,3 +153,53 @@ def get_ai_insight(email: str = "testuser@healus.com", db: Session = Depends(get
         "model": model_name,
         "prompt_used": prompt
     }
+
+@router.post("/chat")
+def ai_chat(payload: schemas.ChatRequest, user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    logs = db.query(models.PumpLog).filter(models.PumpLog.user_id == user.id).order_by(models.PumpLog.created_at.desc()).limit(7).all()
+    logs.reverse()
+
+    recent_logs_text = "\n".join([
+        f"- {log.month}/{log.day}: 식사 주입(Bolus) {log.eat_total}U, 수면 {log.sleep_hours}h, 스트레스 {log.stress_level}/10, 운동 {log.exercise_hours}h, 이벤트 [{log.event_tags or '없음'}], 평균혈당 {log.avg_cgm}mg/dL"
+        for log in logs
+    ])
+
+    system_prompt = f"""
+당신은 당뇨병 환자를 돕는 따뜻하고 전문적인 'Healus AI 주치의'입니다.
+환자의 이름은 '{user.name}'입니다.
+
+환자의 최근 7일 데이터:
+{recent_logs_text if logs else "아직 데이터가 없습니다."}
+
+지침:
+1. 항상 친절하고 공감하는 태도로 답변하세요.
+2. 유저가 제공된 7일 데이터를 기반으로 질문하면 수치에 기반하여 답변하세요.
+3. 의료적 확진이나 진단은 피하고, '도움이 될 수 있습니다', '의사와 상담하세요' 등의 표현을 사용하세요.
+4. 유저가 읽기 편하게 Markdown 포맷(줄바꿈, 굵게 등)을 적절히 활용하여 간결하게 대답하세요.
+5. [중요] 반드시 올바르고 자연스러운 한국어 맞춤법을 사용하세요. 의학 용어(예: '인슐린', '혈당', '포도당' 등)의 오탈자가 발생하지 않도록 각별히 주의하세요.
+"""
+
+    messages = [{"role": "system", "content": system_prompt}]
+    for msg in payload.messages:
+        # Ignore unsupported roles or map them
+        role = msg.role if msg.role in ["user", "assistant", "system"] else "user"
+        messages.append({"role": role, "content": msg.content})
+
+    try:
+        client = OpenAI(base_url="http://localhost:1234/v1", api_key="lm-studio")
+        response = client.chat.completions.create(
+            model="llama-3.1-storm-8b",
+            messages=messages,
+            temperature=0.2,
+            max_tokens=500,
+            presence_penalty=0.1
+        )
+        ai_response = response.choices[0].message.content
+        return {"status": "success", "response": ai_response}
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {"status": "error", "response": "죄송합니다. 현재 AI 주치의 서버에 접속할 수 없습니다. 잠시 후 다시 시도해 주세요."}

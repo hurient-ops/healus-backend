@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.logs import router as logs_router
 from api.web import router as web_router
+from api.auth import router as auth_router
 from core.database import engine
 from models import models
 
@@ -20,6 +21,7 @@ app.add_middleware(
 
 app.include_router(logs_router, prefix="/api")
 app.include_router(web_router, prefix="/api/web")
+app.include_router(auth_router, prefix="/api/auth")
 
 @app.get("/")
 def read_root():

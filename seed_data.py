@@ -2,6 +2,10 @@ import os
 import sys
 from datetime import datetime, timedelta, timezone
 import random
+import uuid
+from passlib.context import CryptContext
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Add parent directory to path to import backend modules
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -19,10 +23,14 @@ def seed_data():
     user = db.query(models.User).filter(models.User.email == "testuser@healus.com").first()
     if not user:
         user = models.User(
+            id=str(uuid.uuid4()),
             email="testuser@healus.com",
-            hashed_password="fake_hashed_password",
+            hashed_password=pwd_context.hash("password123"),
             name="김당뇨",
-            device_mac="AA:BB:CC:DD:EE:FF"
+            phone_number="010-1234-5678",
+            birth_date="1980-01-01",
+            terms_agreed=True,
+            pump_id="1234567890ABCDEF1234567890ABCDEF"
         )
         db.add(user)
         db.commit()
@@ -67,7 +75,7 @@ def seed_data():
 
         pump_log = models.PumpLog(
             user_id=user.id,
-            device_mac=user.device_mac,
+            pump_id=user.pump_id,
             month=dt.month,
             day=dt.day,
             base_total=base_total,
