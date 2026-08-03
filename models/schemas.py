@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Union
 
 class UserSignupRequest(BaseModel):
     name: str
@@ -15,7 +15,7 @@ class UserLoginRequest(BaseModel):
     password: str
 
 class PumpLogPayload(BaseModel):
-    id: Optional[str] = None
+    id: Optional[Union[str, int]] = None
     pump_id: str
     month: int
     day: int
@@ -41,7 +41,7 @@ class BulkLogsRequest(BaseModel):
     logs: List[PumpLogPayload]
 
 class RawPacketPayload(BaseModel):
-    id: Optional[str] = None
+    id: Optional[Union[str, int]] = None
     pump_id: str
     direction: str  # 'TX' or 'RX'
     payload_hex: str
@@ -51,7 +51,7 @@ class BulkRawPacketsRequest(BaseModel):
     packets: List[RawPacketPayload]
 
 class BloodGlucoseLogRequest(BaseModel):
-    id: Optional[str] = None
+    id: Optional[Union[str, int]] = None
     user_email: Optional[str] = None
     glucose_value: int
     tag: str
