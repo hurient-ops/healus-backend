@@ -70,7 +70,6 @@ def receive_raw_logs(payload: BulkRawPacketsRequest, db: Session = Depends(get_d
     for packet in payload.packets:
         existing_packet = db.query(RawPacketLog).filter(
             RawPacketLog.pump_id == packet.pump_id,
-            RawPacketLog.timestamp == packet.timestamp,
             RawPacketLog.payload_hex == packet.payload_hex
         ).first()
         
@@ -80,8 +79,7 @@ def receive_raw_logs(payload: BulkRawPacketsRequest, db: Session = Depends(get_d
                 user_id=user_id,
                 pump_id=packet.pump_id,
                 direction=packet.direction,
-                payload_hex=packet.payload_hex,
-                timestamp=packet.timestamp
+                payload_hex=packet.payload_hex
             )
             db.add(new_packet)
             db_packets_added += 1

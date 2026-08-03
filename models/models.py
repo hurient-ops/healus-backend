@@ -57,7 +57,6 @@ class RawPacketLog(Base):
     pump_id = Column(String, index=True, nullable=False)
     direction = Column(String, nullable=False)  # 'TX' or 'RX'
     payload_hex = Column(String, nullable=False)
-    timestamp = Column(String, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     owner = relationship("User", back_populates="raw_packets")
