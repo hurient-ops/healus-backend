@@ -9,7 +9,6 @@ class User(Base):
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     email = Column(String, unique=True, index=True, nullable=False)
-    hashed_password = Column(String, nullable=False)
     name = Column(String, nullable=True)
     phone_number = Column(String, nullable=False)
     birth_date = Column(String, nullable=False)

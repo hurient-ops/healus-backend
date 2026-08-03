@@ -43,7 +43,6 @@ def signup(payload: schemas.UserSignupRequest, db: Session = Depends(get_db)):
         id=str(uuid.uuid4()),
         name=payload.name,
         email=payload.email,
-        hashed_password=get_password_hash(payload.password),
         phone_number=payload.phone_number,
         birth_date=payload.birth_date,
         terms_agreed=payload.terms_agreed,
@@ -64,12 +63,6 @@ def signup(payload: schemas.UserSignupRequest, db: Session = Depends(get_db)):
 def login(payload: schemas.UserLoginRequest, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == payload.email).first()
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="이메일 또는 비밀번호가 올바르지 않습니다."
-        )
-        
-    if not pwd_context.verify(payload.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="이메일 또는 비밀번호가 올바르지 않습니다."
