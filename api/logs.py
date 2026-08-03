@@ -36,7 +36,7 @@ def receive_logs(payload: BulkLogsRequest, db: Session = Depends(get_db)):
             db_logs_updated += 1
         else:
             new_log = PumpLog(
-                id=str(uuid.uuid4()),
+                id=uuid.uuid4(),
                 user_id=user_id,
                 pump_id=log.pump_id,
                 month=log.month,
@@ -75,7 +75,7 @@ def receive_raw_logs(payload: BulkRawPacketsRequest, db: Session = Depends(get_d
         
         if not existing_packet:
             new_packet = RawPacketLog(
-                id=str(uuid.uuid4()),
+                id=uuid.uuid4(),
                 user_id=user_id,
                 pump_id=packet.pump_id,
                 direction=packet.direction,

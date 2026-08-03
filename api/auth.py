@@ -40,7 +40,7 @@ def signup(payload: schemas.UserSignupRequest, db: Session = Depends(get_db)):
 
     # Create new user
     new_user = models.User(
-        id=str(uuid.uuid4()),
+        id=uuid.uuid4(),
         name=payload.name,
         email=payload.email,
         phone_number=payload.phone_number,

@@ -1,13 +1,14 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+from sqlalchemy.dialects.postgresql import UUID
 from core.database import Base
 import uuid
 
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     email = Column(String, unique=True, index=True, nullable=False)
     name = Column(String, nullable=True)
     phone_number = Column(String, nullable=False)
@@ -24,8 +25,8 @@ class User(Base):
 class PumpLog(Base):
     __tablename__ = "pump_logs"
 
-    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    user_id = Column(String(36), ForeignKey("users.id"), nullable=True) # Linked to User
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True) # Linked to User
     pump_id = Column(String, index=True, nullable=False)
     month = Column(Integer, nullable=False)
     day = Column(Integer, nullable=False)
@@ -52,8 +53,8 @@ class PumpLog(Base):
 class RawPacketLog(Base):
     __tablename__ = "raw_packet_logs"
 
-    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    user_id = Column(String(36), ForeignKey("users.id"), nullable=True) # Linked to User
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True) # Linked to User
     pump_id = Column(String, index=True, nullable=False)
     direction = Column(String, nullable=False)  # 'TX' or 'RX'
     payload_hex = Column(String, nullable=False)
@@ -64,8 +65,8 @@ class RawPacketLog(Base):
 class BloodGlucoseLog(Base):
     __tablename__ = "blood_glucose_logs"
 
-    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    user_id = Column(String(36), ForeignKey("users.id"), nullable=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     glucose_value = Column(Integer, nullable=False)
     tag = Column(String, nullable=False) # e.g., '식전', '식후', '공복', '취침전'
     recorded_at = Column(DateTime(timezone=True), nullable=False)
