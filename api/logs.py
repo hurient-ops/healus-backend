@@ -4,6 +4,7 @@ from models.schemas import BulkLogsRequest, BulkRawPacketsRequest
 from models.models import PumpLog, RawPacketLog, User
 from core.database import get_db
 import uuid
+from datetime import datetime
 
 router = APIRouter()
 
@@ -35,10 +36,14 @@ def receive_logs(payload: BulkLogsRequest, db: Session = Depends(get_db)):
             existing_log.append_total = log.append_total
             db_logs_updated += 1
         else:
+            current_year = datetime.now().year
+            date_str = f"{current_year}-{log.month:02d}-{log.day:02d}"
+            
             new_log = PumpLog(
                 id=uuid.uuid4(),
                 user_id=user_id,
                 pump_id=log.pump_id,
+                date=date_str,
                 month=log.month,
                 day=log.day,
                 base_total=log.base_total,

@@ -28,6 +28,7 @@ class PumpLog(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True) # Linked to User
     pump_id = Column(String, index=True, nullable=False)
+    date = Column(String, nullable=False)  # Missing NOT NULL column
     month = Column(Integer, nullable=False)
     day = Column(Integer, nullable=False)
     base_total = Column(Float, nullable=False)
