@@ -8,3 +8,4 @@ asyncpg
 openai
 passlib[bcrypt]
 PyJWT
+psycopg2-binary
