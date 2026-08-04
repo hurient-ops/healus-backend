@@ -21,13 +21,21 @@ def receive_logs(payload: BulkLogsRequest, db: Session = Depends(get_db)):
     db_logs_added = 0
     db_logs_updated = 0
     for log in payload.logs:
-        existing_log = db.query(PumpLog).filter(
-            PumpLog.pump_id == log.pump_id,
-            PumpLog.month == log.month,
-            PumpLog.day == log.day
-        ).first()
+        if user_id:
+            existing_log = db.query(PumpLog).filter(
+                PumpLog.user_id == user_id,
+                PumpLog.month == log.month,
+                PumpLog.day == log.day
+            ).first()
+        else:
+            existing_log = db.query(PumpLog).filter(
+                PumpLog.pump_id == log.pump_id,
+                PumpLog.month == log.month,
+                PumpLog.day == log.day
+            ).first()
         
         if existing_log:
+            existing_log.pump_id = log.pump_id
             existing_log.base_total = log.base_total
             existing_log.eat_total = log.eat_total
             existing_log.morning_total = log.morning_total
