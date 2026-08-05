@@ -13,8 +13,13 @@ def receive_logs(payload: BulkLogsRequest, db: Session = Depends(get_db)):
     if not payload.logs:
         return {"status": "success", "message": "No logs to insert"}
     
-    # Find user_id by pump_id
     pump_id = payload.logs[0].pump_id
+    if not pump_id or pump_id in ["EMPTY", "UNKNOWN_PID"]:
+        # HTTP 400 에러를 반환하여 유입 차단
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="Invalid pump_id. Real PID is required.")
+
+    # Find user_id by pump_id
     user = db.query(User).filter(User.pump_id == pump_id).first()
     user_id = user.id if user else None
     
@@ -74,8 +79,13 @@ def receive_raw_logs(payload: BulkRawPacketsRequest, db: Session = Depends(get_d
     if not payload.packets:
         return {"status": "success", "message": "No packets to insert"}
 
-    # Find user_id by pump_id
     pump_id = payload.packets[0].pump_id
+    if not pump_id or pump_id in ["EMPTY", "UNKNOWN_PID"]:
+        # HTTP 400 에러를 반환하여 유입 차단
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="Invalid pump_id. Real PID is required.")
+
+    # Find user_id by pump_id
     user = db.query(User).filter(User.pump_id == pump_id).first()
     user_id = user.id if user else None
 
