@@ -63,3 +63,8 @@ class ChatMessage(BaseModel):
 
 class ChatRequest(BaseModel):
     messages: List[ChatMessage]
+
+class PumpStatusRequest(BaseModel):
+    battery_level: Optional[int] = None
+    insulin_remaining: Optional[float] = None
+

@@ -14,6 +14,8 @@ class User(Base):
     phone_number = Column(String, nullable=False)
     birth_date = Column(String, nullable=False)
     pump_id = Column(String, unique=True, index=True, nullable=True)  # 16-byte PID from pump
+    pump_battery_level = Column(Integer, nullable=True)
+    pump_insulin_remaining = Column(Float, nullable=True)
     terms_agreed = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

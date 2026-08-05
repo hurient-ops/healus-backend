@@ -42,6 +42,8 @@ def get_dashboard_data(user: models.User = Depends(get_current_user), db: Sessio
         "status": "success",
         "data": {
             "user_name": user.name,
+            "pump_battery_level": user.pump_battery_level,
+            "pump_insulin_remaining": user.pump_insulin_remaining,
             "pump_logs": processed_pump_logs,
             "bg_logs": [
                 {

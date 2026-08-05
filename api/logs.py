@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from models.schemas import BulkLogsRequest, BulkRawPacketsRequest
+from models.schemas import BulkLogsRequest, BulkRawPacketsRequest, PumpStatusRequest
 from models.models import PumpLog, RawPacketLog, User
 from core.database import get_db
 import uuid
@@ -111,3 +111,22 @@ def receive_raw_logs(payload: BulkRawPacketsRequest, db: Session = Depends(get_d
 
     print(f"Inserted {db_packets_added} (out of {len(payload.packets)}) raw packets from device {payload.packets[0].pump_id}")
     return {"status": "success", "message": f"Successfully inserted {db_packets_added} raw packets"}
+
+@router.post("/pump-status/{pump_id}")
+def update_pump_status(pump_id: str, payload: PumpStatusRequest, db: Session = Depends(get_db)):
+    if not pump_id or pump_id in ["EMPTY", "UNKNOWN_PID"]:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="Invalid pump_id. Real PID is required.")
+    
+    user = db.query(User).filter(User.pump_id == pump_id).first()
+    if not user:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="User with this pump_id not found")
+        
+    if payload.battery_level is not None:
+        user.pump_battery_level = payload.battery_level
+    if payload.insulin_remaining is not None:
+        user.pump_insulin_remaining = payload.insulin_remaining
+        
+    db.commit()
+    return {"status": "success", "message": "Pump status updated successfully"}
